@@ -1,0 +1,24 @@
+const adHosts = [
+    "doubleclick.net",
+    "googlesyndication.com",
+    "adnxs.com",
+    "adsafeprotected.com",
+    "moatads.com",
+    "criteo.com",
+    "rubiconproject.com",
+    "openx.net",
+    "taboola.com",
+    "outbrain.com"
+];
+
+chrome.webRequest.onBeforeRequest.addListener(
+    (details) => {
+        console.log(`Blocked: ${details.url}`);
+        return { cancel: true };
+    }, {
+        urls: adHosts.flatMap(host => [
+            `*://*.${host}/*`,
+            `*://${host}/*`
+        ])
+    }, ["blocking"]
+);

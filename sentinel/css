@@ -1,0 +1,7 @@
+NetworkSentinel/
+├── manifest.json
+├── icon.png         
+├── content.js
+├── popup.html
+├── popup.js
+└── rules_1.json
