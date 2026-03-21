@@ -1,52 +1,19 @@
-const domainKey = "block_" + window.location.hostname;
-
-chrome.storage.local.get([domainKey], (data) => {
-  if (data[domainKey] !== false) {
-    blockAds();
-  }
-});
-
-chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes[domainKey]) {
-    if (changes[domainKey].newValue === false) {
-      location.reload();
-    } else {
-      blockAds();
-    }
-  }
-});
-
-function blockAds() {
-  window.open = () => null;
-  window.onbeforeunload = null;
-  history.pushState = history.replaceState = () => {};
-
-  document.addEventListener("click", (e) => {
-    const el = e.target.closest("a[target='_blank']");
-    if (el && !el.href.includes(window.location.hostname)) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  }, true);
-
-  const selectors = [
-    "iframe",
-    "[id*='popup']",
-    "[class*='popup']",
-    "[id*='overlay']",
-    "[class*='overlay']",
-    "[id*='modal']",
-    "[class*='modal']",
-    "[id*='ads']",
-    "[class*='ads']"
-  ];
-  const removeAds = () => {
-    selectors.forEach(sel => {
-      document.querySelectorAll(sel).forEach(el => el.remove());
+document.addEventListener('DOMContentLoaded', () => {
+  const adSelectors = ['.ad-banner', '.ad', 'iframe[src*="ads"]', 'ins.adsbygoogle'];
+  adSelectors.forEach(selector => {
+    document.querySelectorAll(selector).forEach(el => {
+      el.style.border = '2px solid red';
+      el.style.position = 'relative';
+      const warning = document.createElement('div');
+      warning.innerText = '⚠️ Advertisement Detected (May Contain Malicious Content) ⚠️';
+      warning.style.cssText = `
+        color: red; font-weight: bold; 
+        background: yellow; padding: 5px; 
+        position: absolute; top: 0; left: 0; 
+        z-index: 9999;
+      `;
+      el.parentElement.insertBefore(warning, el);
     });
-  };
-  removeAds();
+  });
+});
 
-  const observer = new MutationObserver(() => removeAds());
-  observer.observe(document.body, { childList: true, subtree: true });
-}
