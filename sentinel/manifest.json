@@ -1,24 +1,44 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 2,
   "name": "Network Sentinel",
-  "...": "...",
-  "permissions": [
-    "declarativeNetRequest",
-    "scripting",
-    "activeTab"
-  ],
-  "host_permissions": ["<all_urls>"],
-  "declarative_net_request": {
-    "rule_resources": [{
-      "id": "block_rules",
-      "enabled": true,
-      "path": "rules/blocklist.json"
-    }]
+  "version": "1.0",
+  "description": "Blocks ads and popups more efficiently than most ad blockers.",
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "assets/icon.png"
   },
-  "content_scripts": [{
-    "matches": ["<all_urls>"],
-    "js": ["content.js"]
-  }],
-  "icons": { ... }
+  "permissions": [
+    "storage",
+    "tabs",
+    "webRequest",
+    "webRequestBlocking",
+    "*://*.hianime.to/*",
+    "*://*.9anime.pl/*",
+    "*://*.aniwatch.to/*",
+    "*://*.hdtodayz.to/*",
+    "*://*.youtube.com/*"
+  ],
+  "browser_action": {
+    "default_icon": "icon.png",
+    "default_popup": "popup.html",
+    "default_title": "Toggle Ad Blocking"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.hianime.to/*",
+        "*://*.9anime.pl/*",
+        "*://*.aniwatch.to/*",
+        "*://*.hdtodayz.to/*",
+        "*://*.youtube.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  }
 }
-
