@@ -1,24 +1,123 @@
-const adHosts = [
+(() => {
+  // ── Ad Hosts ──────────────────────────────────────────────────────────────────
+  const AD_HOSTS = [
+    // Google
     "doubleclick.net",
     "googlesyndication.com",
-    "adnxs.com",
+    "googleadservices.com",
+    "google-analytics.com",
+    "googletagmanager.com",
+    "googletagservices.com",
+
+    "adnxs.com",           // Xandr (Microsoft)
+    "criteo.com",          // Criteo
+    "rubiconproject.com",  // Magnite
+    "openx.net",           // OpenX
+    "pubmatic.com",        // PubMatic
+    "smartadserver.com",   // Smart AdServer
+    "33across.com",        // 33Across
+    "sovrn.com",           // Sovrn
+    "advertising.com",     // Oath/Verizon
+    "yieldmo.com",         // Yieldmo
+    "appnexus.com",        // AppNexus
+    "rlcdn.com",           // Relsci
+    "casalemedia.com",     // Index Exchange
+    "indexww.com",         // Index Exchange
+    "lijit.com",           // Sovrn/Lijit
+    "undertone.com",       // Undertone
+    "triplelift.com",      // TripleLift
+
+    "outbrain.com",
+    "revcontent.com",
+    "mgid.com",
+    "zergnet.com",
+    "contentad.net",
+
     "adsafeprotected.com",
     "moatads.com",
-    "criteo.com",
-    "rubiconproject.com",
-    "openx.net",
-    "taboola.com",
-    "outbrain.com"
-];
+    "scorecardresearch.com",
+    "quantserve.com",
+    "adsystem.com",
+    "adform.net",
+    "adroll.com",
+    "bluekai.com",
+    "demdex.net",          // Adobe Audience Manager
+    "exelate.com",         // Nielsen
+    "krxd.net",            // Salesforce DMP
+    "contextweb.com",      // Pulsepoint
+    "media.net",           // Media.net
+    "bidswitch.net",       // IPONWEB
+    "adsymptotic.com",
+    "adscale.de",
+    "adtech.de",
 
-chrome.webRequest.onBeforeRequest.addListener(
+    "popads.net",
+    "popcash.net",
+    "propellerads.com",
+    "clickadu.com",
+    "hilltopads.net",
+    "trafficjunky.net",
+    "juicyads.com",
+
+    "zedo.com",
+    "yieldmanager.com",
+    "fastclick.net",
+    "adbrite.com",
+    "xtendmedia.com",
+  ];
+
+  // ── Build URL patterns ────────────────────────────────────────────────────────
+  const urlPatterns = AD_HOSTS.flatMap(host => [
+    `*://*.${host}/*`,
+    `*://${host}/*`,
+  ]);
+
+  let isEnabled = true;
+  let blockedCount = 0;
+
+  // Restore persisted state
+  chrome.storage.local.get(['isEnabled', 'blockedCount'], (data) => {
+    if (typeof data.isEnabled === 'boolean') isEnabled = data.isEnabled;
+    if (typeof data.blockedCount === 'number') blockedCount = data.blockedCount;
+  });
+
     (details) => {
-        console.log(`Blocked: ${details.url}`);
-        return { cancel: true };
-    }, {
-        urls: adHosts.flatMap(host => [
-            `*://*.${host}/*`,
-            `*://${host}/*`
-        ])
-    }, ["blocking"]
-);
+      if (!isEnabled) return { cancel: false };
+
+      blockedCount++;
+      chrome.storage.local.set({ blockedCount });
+      console.log(`[Network Sentinel] Blocked #${blockedCount}: ${details.url}`);
+
+      return { cancel: true };
+    },
+    { urls: urlPatterns },
+    ["blocking"]
+  );
+
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    switch (message.type) {
+
+      case 'GET_STATE':
+        sendResponse({ isEnabled, blockedCount });
+        break;
+
+      case 'TOGGLE':
+        isEnabled = !isEnabled;
+        chrome.storage.local.set({ isEnabled });
+        sendResponse({ isEnabled });
+        break;
+
+      case 'RESET_COUNT':
+        blockedCount = 0;
+        chrome.storage.local.set({ blockedCount: 0 });
+        sendResponse({ blockedCount });
+        break;
+
+      default:
+        sendResponse({ error: 'Unknown message type' });
+    }
+
+    return true; // keep message channel open for async response
+  });
+
+})();
