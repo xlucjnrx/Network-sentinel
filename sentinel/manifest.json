@@ -13,11 +13,7 @@
     "tabs",
     "webRequest",
     "webRequestBlocking",
-    "*://*.hianime.to/*",
-    "*://*.9anime.pl/*",
-    "*://*.aniwatch.to/*",
-    "*://*.hdtodayz.to/*",
-    "*://*.youtube.com/*"
+    "<all_urls>"
   ],
   "browser_action": {
     "default_icon": "icon.png",
@@ -26,13 +22,12 @@
   },
   "content_scripts": [
     {
-      "matches": [
-        "*://*.hianime.to/*",
-        "*://*.9anime.pl/*",
-        "*://*.aniwatch.to/*",
-        "*://*.hdtodayz.to/*",
-        "*://*.youtube.com/*"
-      ],
+      "matches": ["<all_urls>"],
+      "js": ["privacy.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["<all_urls>"],
       "js": ["content.js"],
       "run_at": "document_start"
     }
@@ -41,4 +36,5 @@
     "scripts": ["background.js"],
     "persistent": true
   }
+}
 }
