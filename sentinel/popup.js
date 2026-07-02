@@ -1,18 +1,42 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const toggle = document.getElementById("toggleBlock");
+(() => {
+  const toggleEl      = document.getElementById('toggleBlock');
+  const statusTextEl  = document.getElementById('statusText');
+  const blockedCountEl= document.getElementById('blockedCount');
+  const resetBtn      = document.getElementById('resetBtn');
 
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const url = new URL(tabs[0].url);
-    const key = "block_" + url.hostname;
+  // ── Render state into the UI ─────────────────────────────────────────────────
+  function renderState({ isEnabled, blockedCount }) {
+    toggleEl.checked = isEnabled;
 
-    chrome.storage.local.get([key], (result) => {
-      toggle.checked = result[key] !== false;
-    });
+    statusTextEl.textContent  = isEnabled ? 'ACTIVE' : 'PAUSED';
+    statusTextEl.className    = isEnabled ? 'status-on' : 'status-off';
 
-    toggle.addEventListener("change", () => {
-      const value = {};
-      value[key] = toggle.checked;
-      chrome.storage.local.set(value);
+    blockedCountEl.textContent = blockedCount.toLocaleString();
+    blockedCountEl.className   = isEnabled ? 'stats-count' : 'stats-count inactive';
+  }
+
+  // ── Load current state from background.js on popup open ─────────────────────
+  chrome.runtime.sendMessage({ type: 'GET_STATE' }, (response) => {
+    if (response) renderState(response);
+  });
+
+  // ── Toggle switch ─────────────────────────────────────────────────────────────
+  toggleEl.addEventListener('change', () => {
+    chrome.runtime.sendMessage({ type: 'TOGGLE' }, (response) => {
+      if (response) renderState({ ...response, blockedCount: getCurrentCount() });
     });
   });
-});
+
+  // ── Reset counter ─────────────────────────────────────────────────────────────
+  resetBtn.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ type: 'RESET_COUNT' }, (response) => {
+      if (response) blockedCountEl.textContent = '0';
+    });
+  });
+
+  // ── Helper: read current displayed count ─────────────────────────────────────
+  function getCurrentCount() {
+    return parseInt(blockedCountEl.textContent.replace(/,/g, ''), 10) || 0;
+  }
+
+})();
